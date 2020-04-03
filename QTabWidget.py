@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import QTabWidget, QDialog, QApplication, QWidget \
     ,QLabel,QLineEdit, QVBoxLayout, QGroupBox,QPushButton,QDialogButtonBox \
-    ,QGroupBox, QCheckBox, QComboBox, QMenuBar,QAction
+    ,QGroupBox, QFileDialog,QCheckBox,QComboBox, QMenuBar,QAction,QMainWindow
 import sys
+from PyQt5.QtGui import QPixmap
 
 class Window(QDialog):
     def __init__(self):
@@ -10,14 +11,14 @@ class Window(QDialog):
         self.initWindow()
 
     def initWindow(self):
-        menuBar=QMenuBar()
-        fileMenu=menuBar.addMenu("file")
-        exitAction=QAction('exit',self)
-        fileMenu.addAction(exitAction)
+        
+
         vbox=QVBoxLayout()
         tabwidget=QTabWidget()
         tabwidget.addTab(ContactDetail(),"Contact Detail")
         tabwidget.addTab(PersonalDetail(), "Personal Detail")
+        tabwidget.addTab(ImageLoad(), "Image Load")
+        
         self.buttonbox=QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonbox.accepted.connect(self.acc)
         self.buttonbox.rejected.connect(self.rej)
@@ -26,11 +27,30 @@ class Window(QDialog):
         vbox.addWidget(self.buttonbox)
         self.setLayout(vbox)
 
-
     def acc(self):
-        pass
+        self.close()
     def rej(self):
         pass
+class ImageLoad(QWidget):
+    def __init__(self):
+        super().__init__()
+        btn=QPushButton("load image")
+        self.lb=QLabel("hello")
+        btn.clicked.connect(self.imBtn)
+        vbox=QVBoxLayout()
+        vbox.addWidget(btn)
+        vbox.addWidget(self.lb)
+        self.setLayout(vbox)
+        
+
+    
+    def imBtn(self):
+        fname=QFileDialog.getOpenFileName(self,'파일이름?','D:\Program Files\WarCraft II\IMG\잡지부록판CD-COVER')
+        imagePath=fname[0]
+        pixmap=QPixmap(imagePath)
+        self.lb.setPixmap(QPixmap(pixmap))
+        # self.resize(pixmap.width(), pixmap.height())
+    
 
 class PersonalDetail(QWidget):
     def __init__(self):
