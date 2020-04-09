@@ -34,7 +34,5 @@ for row in cur.execute(sqlstr):
     print(str(row[0]), row[1])
 
 cur.close()
-TWITTER_URL = 'https://api.twitter.com/1.1/friends/list.json'
-connection = urlopen(TWITTER_URL)
-data=connection.read().decode()
+
 

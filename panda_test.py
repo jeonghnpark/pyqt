@@ -1,3 +1,6 @@
 import pandas as pd 
 df=pd.read_csv('sample.csv')
-print(df.head())
+type(df)
+df.shape
+print(df)
+df.columns
