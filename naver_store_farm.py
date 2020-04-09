@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QTabWidget, QDialog, QApplication, QWidget \
     ,QLabel,QLineEdit, QVBoxLayout,QHBoxLayout ,QGroupBox,QPushButton,QDialogButtonBox \
-    ,QGroupBox, QFileDialog,QInputDialog,QCheckBox,QComboBox,QListWidget ,QMenuBar,QAction,QMainWindow
+    ,QGroupBox, QFileDialog,QInputDialog,QCheckBox,QTableWidget,QTableWidgetItem,QComboBox,QListWidget ,QMenuBar,QAction,QMainWindow
 import sys
 from PyQt5 import QtGui
 from PyQt5.QtGui import QPixmap
@@ -11,7 +11,7 @@ from functools import partial
 class Window(QDialog):
     def __init__(self):
         super().__init__()
-        self.setGeometry(100,100,400,400)
+        self.setGeometry(100,100,800,800)
         self.initWindow()
 
     def initWindow(self):
@@ -19,16 +19,15 @@ class Window(QDialog):
         vbox=QVBoxLayout()
         tabwidget=QTabWidget()
         tabwidget.addTab(MyStorFarm(), "나의 스토어팜")
-        tabwidget.addTab(ContactDetail(),"Contact Detail")
+        tabwidget.addTab(ContactDetail(),"신상품 찾기")
+        tabwidget.addTab(ImageLoad(), "트렌트분석")
         
-        tabwidget.addTab(ImageLoad(), "Image Load")
-        
-        self.buttonbox=QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.buttonbox.accepted.connect(self.acc)
-        self.buttonbox.rejected.connect(self.rej)
+        # self.buttonbox=QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        # self.buttonbox.accepted.connect(self.acc)
+        # self.buttonbox.rejected.connect(self.rej)
 
         vbox.addWidget(tabwidget)
-        vbox.addWidget(self.buttonbox)
+        # vbox.addWidget(self.buttonbox)
         self.setLayout(vbox)
 
     def acc(self):
@@ -87,7 +86,20 @@ class MyStorFarm(QWidget):
         self.gear_btn.clicked.connect(partial(self.setFarm,self.li))
 
         self.farm_combo.currentTextChanged.connect(self.show_farm_name)
-        self.setLayout(hbox)
+        vbox=QVBoxLayout()
+        self.tablewidget=QTableWidget()
+        self.tablewidget.setRowCount(10)
+        self.tablewidget.setColumnCount(5)
+        self.tablewidget.setItem(0,0,QTableWidgetItem("Name"))
+        self.tablewidget.setItem(0,1,QTableWidgetItem("판매수"))
+        
+        self.groupbox=QGroupBox()
+        self.groupbox.setLayout(hbox)
+
+        vbox.addWidget(self.groupbox)
+        vbox.addWidget(self.tablewidget)
+
+        self.setLayout(vbox)
 
     def setFarm(self,li):
         self.farmlist=FarmList(self.li)

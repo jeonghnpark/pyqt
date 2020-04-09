@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication 
+from PyQt5.QtWidgets import QMainWindow, QInputDialog,QAction, qApp, QApplication 
 from PyQt5.QtGui import QIcon 
 class Example(QMainWindow): 
     def __init__(self): 
