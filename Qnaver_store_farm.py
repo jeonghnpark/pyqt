@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QTabWidget, QDialog, QApplication, QWidget \
 import sys
 from PyQt5 import QtGui
 from PyQt5.QtGui import QPixmap
+from PyQt5 import Qt
 import requests
 from bs4 import BeautifulSoup
 from functools import partial
@@ -95,6 +96,7 @@ class MyStorFarm(QWidget):
 
         vbox=QVBoxLayout()
         self.tablewidget=QTableWidget()
+        
         self.tablewidget.setRowCount(300)
         self.tablewidget.setColumnCount(6)
         self.tablewidget.setItem(0,0,QTableWidgetItem("상품명"))
@@ -113,7 +115,7 @@ class MyStorFarm(QWidget):
         #             REPlACE INTO PROD (dt,title, pid, jjim, sold,review) VALUES (?,?,?,?,?,?);''', (tod,item['name'],item['pid'] ,item['jjim'],item['sold'],item['review']))
         
         cur.execute('''
-                    Select title, jjim, sold, review from PROD where dt='2020-04-14' ''')
+                    Select title, jjim, sold, review from PROD where dt='2020-04-14' order by sold desc ''')
         
         conn.commit()
         
@@ -137,6 +139,8 @@ class MyStorFarm(QWidget):
         self.groupbox.setLayout(hbox)
 
         vbox.addWidget(self.groupbox)
+        self.tablewidget.resizeColumnToContents(0)
+        # self.tablewidget.sortByColumn(3,Qt.Sort)
         vbox.addWidget(self.tablewidget)
 
         self.setLayout(vbox)
