@@ -31,6 +31,7 @@ def all_items(mall_name='헤이해나'):
     OUTPUT : {"name":item_name, "mall":mall_name, "jjim":jjim, 'review':review, 'sold':sold, 'pid':pid}
     '''
     url=f"https://search.shopping.naver.com/search/all.nhn?query={mall_name}"
+    url_home="https://smartstore.naver.com/heyhannah"
     # url2=f"https://search.shopping.naver.com/search/all.nhn?origQuery={mall_name}&pagingIndex=2&pagingSize=40&viewType=list&sort=rel&frm=NVSHPAG&query={mall_name}"
     max_page=find_global_max(mall_name)
     driver=webdriver.Chrome()
@@ -69,7 +70,8 @@ def all_items(mall_name='헤이해나'):
                         sold=a_tag.text[4:]
                 if sold=='' : sold=0
                 if review=='':review =0
-                itemslist.append({"name":item_name, "mall":mall_name, "jjim":jjim, 'review':review, 'sold':sold, 'pid':pid})
+                link=url_home="https://smartstore.naver.com/heyhannah/products/" +pid
+                itemslist.append({"name":item_name, "mall":mall_name, "jjim":jjim, 'review':review, 'sold':sold, 'pid':pid,'link':link})
     return itemslist
 
 if __name__=="__main__":
@@ -77,15 +79,18 @@ if __name__=="__main__":
     # print(itemslist)
     conn=sqlite3.connect('emaildb.sqlite')
     cur=conn.cursor()
-    tod=datetime.today()+timedelta(days=-1)
+    tod=datetime.today()+timedelta(days=0)
     tod=tod.strftime('%Y-%m-%d')
     
 
     print(tod)
     for item in itemslist:
         # print(item['name'])
-        cur.execute('''
-                REPLACE INTO PROD3 (dt,title, pid,jjim, sold,review) VALUES (?,?,?,?,?,?);''', (tod,item['name'],item['pid'],item['jjim'],item['sold'],item['review']))
-        # conn.commit()
+        sql=f"REPLACE INTO PROD3 (dt,title, pid,jjim, sold,review,link) VALUES('{tod}','{item['name']}','{item['pid']}','{item['jjim']}','{item['sold']}','{item['review']}','{item['link']}')"
+        # print(sql)
+        cur.execute(sql)
+        # cur.execute('''
+        #         REPLACE INTO PROD3 (dt,title, pid,jjim, sold,review,link) VALUES (?,?,?,?,?,?,?);''', (tod,item['name'],item['pid'],item['jjim'],item['sold'],item['review']))
+        conn.commit()
     conn.commit()
     cur.close()

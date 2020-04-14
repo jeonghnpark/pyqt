@@ -44,17 +44,18 @@ class FarmList(QWidget):
     def __init__(self,li):
         super().__init__()
         self.InitUi(li)
+        self.farmlist=li
     
-    def InitUi(self,li):
+    def InitUi(self):
         self.listwidget=QListWidget()
-        self.listwidget.addItems(li)
+        self.listwidget.addItems(self.farmlist)
         self.hbox=QHBoxLayout()
         self.addBtn=QPushButton('add')
 
         self.hbox.addWidget(self.listwidget)
         self.hbox.addWidget(self.addBtn)
         
-        self.addBtn.clicked.connect(partial(self.addFarm,li))
+        self.addBtn.clicked.connect(partial(self.addFarm,self.farmlist))
         self.setLayout(self.hbox)
 
     def addFarm(self,li):
@@ -94,14 +95,16 @@ class MyStorFarm(QWidget):
         
         self.date_combo=QComboBox()
         self.init_date_combo()
-
+        self.btn_download=QPushButton("오늘 데이터 받기")
+        self.btn_download.setIcon(QtGui.QIcon("download.png"))
         hbox2.addWidget(QLabel("조회일"))
         hbox2.addWidget(self.date_combo)
+        hbox2.addWidget(self.btn_download)
         hbox2.addStretch()
         self.gear_btn.clicked.connect(partial(self.setFarm,self.li))
         self.btn_show_prod.clicked.connect(self.get_prod)
         self.farm_combo.currentTextChanged.connect(self.show_farm_name)
-
+        self.btn_download.clicked.connect(self.download_data)
         vbox=QVBoxLayout()
         self.tablewidget=QTableWidget()
         self.updateProdList()
@@ -121,6 +124,35 @@ class MyStorFarm(QWidget):
 
         self.setLayout(vbox)
     
+    def download_data(self):
+        mall_name='헤이해나'
+        mall_name=self.shop_title_label.text()
+        # url=self.farm_combo.currentText()
+        # req=requests.get(url)
+        # soup=BeautifulSoup(req.text, 'html.parser')
+        # self.shop_title_label.setText(soup.find('title').text.strip())
+
+
+        itemslist=all_items(mall_name)
+        # print(itemslist)
+        conn=sqlite3.connect('emaildb.sqlite')
+        cur=conn.cursor()
+        tod=datetime.today()+timedelta(days=0)
+        tod=tod.strftime('%Y-%m-%d')
+        
+
+        print(tod)
+        for item in itemslist:
+            # print(item['name'])
+            sql=f"REPLACE INTO PROD3 (dt,title, pid,jjim, sold,review,link) VALUES('{tod}','{item['name']}','{item['pid']}','{item['jjim']}','{item['sold']}','{item['review']}','{item['link']}')"
+            # print(sql)
+            cur.execute(sql)
+            # cur.execute('''
+            #         REPLACE INTO PROD3 (dt,title, pid,jjim, sold,review,link) VALUES (?,?,?,?,?,?,?);''', (tod,item['name'],item['pid'],item['jjim'],item['sold'],item['review']))
+            conn.commit()
+        conn.commit()
+        cur.close()
+
     def init_date_combo(self):
         conn=sqlite3.connect('emaildb.sqlite')
         cur=conn.cursor()
@@ -156,6 +188,8 @@ class MyStorFarm(QWidget):
         self.tablewidget.setItem(0,1,QTableWidgetItem("찜"))
         self.tablewidget.setItem(0,2,QTableWidgetItem("구매"))
         self.tablewidget.setItem(0,3,QTableWidgetItem("리뷰"))
+        self.tablewidget.setItem(0,4,QTableWidgetItem("LINK"))
+        
         
 
         # itemslist=all_items()
@@ -169,8 +203,8 @@ class MyStorFarm(QWidget):
         
         # cur.execute('''
         #             Select title, jjim, sold, review from PROD3 where dt='2020-04-14' order by sold desc ''')
-
-        sql=f"Select title, jjim, sold, review from PROD3 where dt='{tod}' order by sold desc"
+        # sql=f"Select title, jjim, sold, review,link from PROD3 where dt='{tod}' and link like '{self.farm_combo.currentText()}%'order by sold desc"
+        sql=f"Select title, jjim, sold, review,link from PROD3 where dt='{tod}' order by sold desc"
         # print(sql)
         cur.execute(sql)
              
