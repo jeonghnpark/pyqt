@@ -73,6 +73,7 @@ class MyStorFarm(QWidget):
     def __init__(self):
         super().__init__()
         hbox=QHBoxLayout()
+        hbox2=QHBoxLayout()
         namelabel=QLabel("스토어팜주소")
         self.farm_combo=QComboBox()
         self.li=['https://smartstore.naver.com/heyhannah','https://smartstore.naver.com/monsclub']
@@ -89,14 +90,66 @@ class MyStorFarm(QWidget):
         hbox.addWidget(self.shop_title_label)
         hbox.addWidget(self.btn_show_prod)
         hbox.addWidget(self.gear_btn)
-    
+
+        
+        self.date_combo=QComboBox()
+        self.init_date_combo()
+
+        hbox2.addWidget(QLabel("조회일"))
+        hbox2.addWidget(self.date_combo)
+        hbox2.addStretch()
         self.gear_btn.clicked.connect(partial(self.setFarm,self.li))
         self.btn_show_prod.clicked.connect(self.get_prod)
         self.farm_combo.currentTextChanged.connect(self.show_farm_name)
 
         vbox=QVBoxLayout()
         self.tablewidget=QTableWidget()
+        self.updateProdList()
         
+        self.groupbox=QGroupBox()
+        self.groupbox2=QGroupBox()
+        
+        self.groupbox.setLayout(hbox)
+        self.groupbox2.setLayout(hbox2)
+        
+
+        vbox.addWidget(self.groupbox)
+        vbox.addWidget(self.groupbox2)
+        
+        self.tablewidget.resizeColumnToContents(0)
+        vbox.addWidget(self.tablewidget)
+
+        self.setLayout(vbox)
+    
+    def init_date_combo(self):
+        conn=sqlite3.connect('emaildb.sqlite')
+        cur=conn.cursor()
+        # tod=datetime.today().strftime('%Y-%m-%d')
+
+        # for item in itemslist:
+        #     cur.execute('''
+        #             REPlACE INTO PROD (dt,title, pid, jjim, sold,review) VALUES (?,?,?,?,?,?);''', (tod,item['name'],item['pid'] ,item['jjim'],item['sold'],item['review']))
+        
+        cur.execute('''
+                    Select distinct dt from PROD3''')
+        
+        conn.commit()
+        
+        rows=cur.fetchall()
+        cur.close()
+
+        
+        li=[]
+        for row in rows:
+            li.append(row[0])
+        li.sort(reverse=True)
+        self.date_combo.addItems(li)
+        
+
+        # print(li)
+
+    def updateProdList(self):
+
         self.tablewidget.setRowCount(300)
         self.tablewidget.setColumnCount(6)
         self.tablewidget.setItem(0,0,QTableWidgetItem("상품명"))
@@ -109,18 +162,23 @@ class MyStorFarm(QWidget):
         conn=sqlite3.connect('emaildb.sqlite')
         cur=conn.cursor()
         tod=datetime.today().strftime('%Y-%m-%d')
-
+        tod=self.date_combo.currentText()
         # for item in itemslist:
         #     cur.execute('''
         #             REPlACE INTO PROD (dt,title, pid, jjim, sold,review) VALUES (?,?,?,?,?,?);''', (tod,item['name'],item['pid'] ,item['jjim'],item['sold'],item['review']))
         
-        cur.execute('''
-                    Select title, jjim, sold, review from PROD where dt='2020-04-14' order by sold desc ''')
-        
+        # cur.execute('''
+        #             Select title, jjim, sold, review from PROD3 where dt='2020-04-14' order by sold desc ''')
+
+        sql=f"Select title, jjim, sold, review from PROD3 where dt='{tod}' order by sold desc"
+        # print(sql)
+        cur.execute(sql)
+             
         conn.commit()
         
         rows=cur.fetchall()
-        
+        # print(rows[0])
+
         for i,row in enumerate(rows):
             # print(i, row[0])
             for j, elem in enumerate(row):
@@ -133,21 +191,12 @@ class MyStorFarm(QWidget):
                 
 
         cur.close()
-        
-        
-        self.groupbox=QGroupBox()
-        self.groupbox.setLayout(hbox)
-
-        vbox.addWidget(self.groupbox)
-        self.tablewidget.resizeColumnToContents(0)
-        # self.tablewidget.sortByColumn(3,Qt.Sort)
-        vbox.addWidget(self.tablewidget)
-
-        self.setLayout(vbox)
 
     def get_prod(self):
         url=self.farm_combo.currentText()
-        print(url)
+        dt=self.date_combo.currentText()
+        self.updateProdList()
+        # print(url)
         
 
     def setFarm(self,li):

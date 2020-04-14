@@ -77,14 +77,15 @@ if __name__=="__main__":
     # print(itemslist)
     conn=sqlite3.connect('emaildb.sqlite')
     cur=conn.cursor()
-    tod=datetime.today().strftime('%Y-%m-%d')
+    tod=datetime.today()+timedelta(days=-1)
+    tod=tod.strftime('%Y-%m-%d')
     
 
     print(tod)
     for item in itemslist:
         # print(item['name'])
         cur.execute('''
-                REPlACE INTO PROD (dt,title, jjim, sold,review) VALUES (?,?,?,?,?,?);''', (tod,item['name'],item['jjim'],item['sold'],item['review']))
+                REPLACE INTO PROD3 (dt,title, pid,jjim, sold,review) VALUES (?,?,?,?,?,?);''', (tod,item['name'],item['pid'],item['jjim'],item['sold'],item['review']))
         # conn.commit()
     conn.commit()
     cur.close()
