@@ -1,0 +1,1 @@
+select * from PROD where dt='2020-04-14'

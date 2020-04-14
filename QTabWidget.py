@@ -76,18 +76,26 @@ class MyStorFarm(QWidget):
         self.farm_combo.addItems(self.li)
         self.shop_title_label=QLabel()
         self.show_farm_name()
+        self.btn_show_prod=QPushButton('조회')
+        self.btn_show_prod.setIcon(QtGui.QIcon('update.png'))
         self.gear_btn=QPushButton()
         self.gear_btn.setIcon(QtGui.QIcon('gear.png'))
 
         hbox.addWidget(namelabel)
         hbox.addWidget(self.farm_combo)
         hbox.addWidget(self.shop_title_label)
+        hbox.addWidget(self.btn_show_prod)
         hbox.addWidget(self.gear_btn)
     
         self.gear_btn.clicked.connect(partial(self.setFarm,self.li))
 
         self.farm_combo.currentTextChanged.connect(self.show_farm_name)
+        self.btn_show_prod.clicked.connect(self.get_prod)
         self.setLayout(hbox)
+    
+    def get_prod(self):
+        url=self.farm_combo.currentText()
+        
 
     def setFarm(self,li):
         self.farmlist=FarmList(self.li)
