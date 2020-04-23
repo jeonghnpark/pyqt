@@ -24,14 +24,14 @@ def find_global_max(words):
             url=f"https://search.shopping.naver.com/search/all.nhn?origQuery={words}&pagingIndex={last_page}&pagingSize=40&viewType=list&sort=rel&frm=NVSHPAG&query={words}"
     return last_page
 
-def all_items(mall_name='헤이해나'):
+def all_items(mall_name, url_home):
     '''
     네이버 쇼핑에서 몰이름으로 검색했을때 보이는 아이템으로 찾기
     모든 상품의 검색되지 않는 문제
     OUTPUT : {"name":item_name, "mall":mall_name, "jjim":jjim, 'review':review, 'sold':sold, 'pid':pid}
     '''
     url=f"https://search.shopping.naver.com/search/all.nhn?query={mall_name}"
-    url_home="https://smartstore.naver.com/heyhannah"
+    # url_home="https://smartstore.naver.com/heyhannah"
     # url2=f"https://search.shopping.naver.com/search/all.nhn?origQuery={mall_name}&pagingIndex=2&pagingSize=40&viewType=list&sort=rel&frm=NVSHPAG&query={mall_name}"
     max_page=find_global_max(mall_name)
     driver=webdriver.Chrome()
@@ -70,16 +70,18 @@ def all_items(mall_name='헤이해나'):
                         sold=a_tag.text[4:]
                 if sold=='' : sold=0
                 if review=='':review =0
-                link=url_home="https://smartstore.naver.com/heyhannah/products/" +pid
+                link=url_home+"/products/" +pid
                 itemslist.append({"name":item_name, "mall":mall_name, "jjim":jjim, 'review':review, 'sold':sold, 'pid':pid,'link':link})
+                # itemslist.append({"name":item_name, "mall":mall_name, "jjim":jjim, 'review':review, 'sold':sold, 'pid':pid, 'link':''})
+                
     return itemslist
 
 if __name__=="__main__":
-    itemslist=all_items()
+    itemslist=all_items('몬스토리', 'https://smartstore.naver.com/monsclub')
     # print(itemslist)
     conn=sqlite3.connect('emaildb.sqlite')
     cur=conn.cursor()
-    tod=datetime.today()+timedelta(days=0)
+    tod=datetime.today()+timedelta(days=-5)
     tod=tod.strftime('%Y-%m-%d')
     
 
