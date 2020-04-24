@@ -20,7 +20,7 @@ from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import QDate, QDateTime
 
 from PyQt5.QtCore import *
-
+from navershopping import find_item2
 
 class Window(QDialog):
     def __init__(self):
@@ -34,7 +34,7 @@ class Window(QDialog):
         tabwidget=QTabWidget()
         tabwidget.addTab(MyStorFarm(), "나의 스토어팜")
         tabwidget.addTab(ProdDetail(), "개별상품 분석")
-        
+        tabwidget.addTab(TabKeyword(), "키워드분석")
         tabwidget.addTab(ContactDetail(),"신상품 찾기")
         tabwidget.addTab(ImageLoad(), "트렌트분석")
         
@@ -209,8 +209,12 @@ class ProdDetail(QWidget):
 
         for i,row in enumerate(rows):
             for j, serie in enumerate(series):
-                serie.append((dt.addDays(i)).toMSecsSinceEpoch(),int(row[j+1]))
- 
+                # serie.append((dt.addDays(i)).toMSecsSinceEpoch(),int(row[j+1]))
+                serie.append(i,int(row[j+1]))
+
+        for serie in series:
+            serie.setPointsVisible(True)
+            
         self.linechart.removeAllSeries()
         self.linechart2.removeAllSeries()
         self.linechart3.removeAllSeries()
@@ -237,11 +241,11 @@ class ProdDetail(QWidget):
         self.linechart.legend().setVisible(True)
 
         self.linechart2.setAnimationOptions(QChart.SeriesAnimations)
-        self.linechart2.setTitle("리뷰")
+        self.linechart2.setTitle("구매")
         self.linechart2.legend().setVisible(True)
 
         self.linechart3.setAnimationOptions(QChart.SeriesAnimations)
-        self.linechart3.setTitle("구매")
+        self.linechart3.setTitle("리뷰")
         self.linechart3.legend().setVisible(True)
 
 
@@ -320,6 +324,283 @@ class ProdDetail(QWidget):
         # self.tablewidget.clear()
         # self.shop_title_label.setText("aaa")
 
+class TabKeyword(QWidget):
+    def __init__(self):
+        super().__init__()
+        hbox=QHBoxLayout()
+        hbox2=QHBoxLayout()
+        hbox3=QHBoxLayout()
+        hbox4=QHBoxLayout()
+
+        self.prod_combo=QComboBox()
+        self.lineEditProdName=QLineEdit()
+        namelabel=QLabel("스토어팜주소")
+        self.farm_combo=QComboBox()
+        self.li=['https://smartstore.naver.com/heyhannah','https://smartstore.naver.com/monsclub']
+        self.farm_combo.addItems(self.li)
+        self.shop_title_label=QLabel()
+        self.show_farm_name()
+        self.btn_show_prod_detail=QPushButton('조회')
+        self.btn_update_keyword=QPushButton('키워드 업데이트')
+        self.btn_show_prod_detail.setIcon(QtGui.QIcon('update.png'))
+        self.btn_update_keyword.setIcon(QtGui.QIcon('update-tag.png'))
+
+        hbox.addWidget(namelabel)
+        hbox.addWidget(self.farm_combo)
+        hbox.addWidget(self.shop_title_label)
+        hbox.addWidget(self.btn_update_keyword)
+
+        hbox2.addWidget(QLabel("키워드"))
+        hbox2.addWidget(self.prod_combo)
+        
+        hbox2.addStretch()
+        hbox3.addWidget(QLabel("직접입력"))
+        
+
+        hbox3.addWidget(self.lineEditProdName)
+        hbox3.addWidget(self.btn_show_prod_detail)
+        hbox3.addStretch()
+
+        self.init_prod_combo()
+        self.btn_show_prod_detail.clicked.connect(self.get_prod_detail)
+        self.btn_update_keyword.clicked.connect(self.update_keyword)
+
+        self.farm_combo.currentTextChanged.connect(self.show_farm_name)
+        self.prod_combo.currentTextChanged.connect(self.input_prod_title)
+
+        vbox=QVBoxLayout()
+   
+        self.linechart=QChart()
+        self.linechart2=QChart()
+        self.linechart3=QChart()
+        
+        self.chartview = QChartView(self.linechart)
+        self.chartview2 = QChartView(self.linechart2)
+        self.chartview3 = QChartView(self.linechart3)
+
+        self.tablewidget=QTableWidget()
+
+        self.chartgroup=QGroupBox()
+        self.chartvbox=QVBoxLayout()
+        self.chartvbox.addWidget(self.chartview)
+        self.chartvbox.addWidget(self.chartview2)
+        self.chartvbox.addWidget(self.chartview3)
+        
+        self.chartgroup.setLayout(self.chartvbox)
+
+        hbox4.addWidget(self.tablewidget)
+        # hbox4.addWidget(self.chartview)
+        hbox4.addWidget(self.chartgroup)
+
+        self.updateProdDetail()
+        self.groupbox=QGroupBox()
+        self.groupbox2=QGroupBox()
+        self.groupbox3=QGroupBox()
+        self.groupbox4=QGroupBox()
+
+        self.groupbox.setLayout(hbox)
+        self.groupbox2.setLayout(hbox2)
+        self.groupbox3.setLayout(hbox3)
+        self.groupbox4.setLayout(hbox4)
+        
+        vbox.addWidget(self.groupbox)
+        vbox.addWidget(self.groupbox2)
+        vbox.addWidget(self.groupbox3)
+        vbox.addWidget(self.groupbox4)
+        
+        self.setLayout(vbox)
+
+
+    def update_keyword(self):
+        mall_url=self.farm_combo.currentText()
+        conn=sqlite3.connect('emaildb.sqlite')
+        cur=conn.cursor()
+        sql=f"Select distinct pid from PROD3 where link like '{mall_url}%'"
+ 
+        cur.execute(sql)
+        conn.commit()
+        
+        rows=cur.fetchall()
+
+        li_pid=[]
+        for row in rows:
+            li_pid.append(row[0])
+
+        
+        # self.prod_combo.clear()
+        # self.prod_combo.addItems(li)
+
+        # cur.close()
+        # conn.close()
+        # self.lineEditProdName.setText(self.prod_combo.currentText())
+
+
+    def init_prod_combo(self):
+        mall_url=self.farm_combo.currentText()
+        conn=sqlite3.connect('emaildb.sqlite')
+        cur=conn.cursor()
+        # sql=f"Select distinct keyword from KEYWORD where link like '{mall_url}%'"
+        sql=f"Select distinct keyword from KEYWORD"
+ 
+        cur.execute(sql)
+        conn.commit()
+        
+        rows=cur.fetchall()
+
+        li=[]
+        for row in rows:
+            li.append(row[0])
+ 
+        self.prod_combo.clear()
+        self.prod_combo.addItems(li)
+
+        cur.close()
+        conn.close()
+        self.lineEditProdName.setText(self.prod_combo.currentText())
+
+    def drawChart(self):
+        conn=sqlite3.connect('emaildb.sqlite')
+        cur=conn.cursor()
+
+        title=self.lineEditProdName.text()
+        mall_url=self.farm_combo.currentText()
+        sql=f"select dt, jjim, sold, review from PROD3 where title='{title}'"
+        cur.execute(sql)
+        conn.commit()
+        rows=cur.fetchall()
+        series=[]
+        # series = QLineSeries(self)
+        series.append(QLineSeries(self))
+        series.append(QLineSeries(self))
+        series.append(QLineSeries(self))
+        
+        tod=datetime.today()
+        nextday=datetime.today()+timedelta(days=1)
+        d=QDate(2020,1,3)
+        dt=QDateTime(d)
+        d2=d.addDays(1)
+        dt2=dt.addDays(1)
+
+        for i,row in enumerate(rows):
+            for j, serie in enumerate(series):
+                # serie.append((dt.addDays(i)).toMSecsSinceEpoch(),int(row[j+1]))
+                serie.append(i,int(row[j+1]))
+
+        for serie in series:
+            serie.setPointsVisible(True)
+            
+        self.linechart.removeAllSeries()
+        self.linechart2.removeAllSeries()
+        self.linechart3.removeAllSeries()
+        
+
+        self.linechart.addSeries(series[0])
+        self.linechart2.addSeries(series[1])
+        self.linechart3.addSeries(series[2])
+        
+        dateAxis=QDateTimeAxis()
+        dateAxis2=QDateTimeAxis()
+        dateAxis3=QDateTimeAxis()
+        
+        self.linechart.addAxis(dateAxis, Qt.AlignBottom)
+        self.linechart2.addAxis(dateAxis2, Qt.AlignBottom)
+        self.linechart3.addAxis(dateAxis3, Qt.AlignBottom)
+        
+        self.linechart.createDefaultAxes()
+        self.linechart2.createDefaultAxes()
+        self.linechart3.createDefaultAxes()
+                   
+        self.linechart.setAnimationOptions(QChart.SeriesAnimations)
+        self.linechart.setTitle("찜")
+        self.linechart.legend().setVisible(True)
+
+        self.linechart2.setAnimationOptions(QChart.SeriesAnimations)
+        self.linechart2.setTitle("구매")
+        self.linechart2.legend().setVisible(True)
+
+        self.linechart3.setAnimationOptions(QChart.SeriesAnimations)
+        self.linechart3.setTitle("리뷰")
+        self.linechart3.legend().setVisible(True)
+
+
+        self.chartview.setRenderHint(QPainter.Antialiasing)
+        self.chartview2.setRenderHint(QPainter.Antialiasing)
+        self.chartview3.setRenderHint(QPainter.Antialiasing)
+
+        cur.close()
+        conn.close()
+        
+    def updateProdDetail(self):
+        self.tablewidget.clear()
+        self.tablewidget.setRowCount(300)
+        self.tablewidget.setColumnCount(6)
+        self.tablewidget.setItem(0,0,QTableWidgetItem("키워드"))
+        self.tablewidget.setItem(0,1,QTableWidgetItem("상품명"))
+        self.tablewidget.setItem(0,2,QTableWidgetItem("네이버검색페이지"))
+        self.tablewidget.setItem(0,3,QTableWidgetItem("순번"))
+
+        # conn=sqlite3.connect('emaildb.sqlite')
+        # cur=conn.cursor()
+
+        # title=self.lineEditProdName.text()
+
+        # mall_url=self.farm_combo.currentText()
+        # sql=f"Select dt, jjim, sold, review from PROD3 where title='{title}' order by dt desc"
+
+        # cur.execute(sql)
+        # conn.commit()
+        
+        # rows=cur.fetchall()
+        keyword=self.lineEditProdName.text()
+        mall_name=''
+
+        rs=find_item2(keyword,mall_name)
+        
+        # for i,row in enumerate(rows):
+        #     # print(i, row[0])
+        #     for j, elem in enumerate(row):
+                
+        #     #     print(i+1,j,elem)
+        #     #     self.tablewidget.setItem(i+1,j,QTableWidgetItem(elem))
+        #         self.tablewidget.setItem(i+1,j,QTableWidgetItem(str(row[j])))
+        #     # print(row[1])
+        #         # self.tablewidget.setItem(i+1,1,QTableWidgetItem(str(row[1])))
+                
+        # self.tablewidget.resizeColumnToContents(0)
+        # cur.close()
+        # conn.close()
+
+        # return len(rows)
+    def input_prod_title(self):
+        self.lineEditProdName.setText(self.prod_combo.currentText())
+
+    def get_prod_detail(self):
+        url=self.farm_combo.currentText()
+        prod_title=self.lineEditProdName.text()
+        self.tablewidget.clear()
+        self.updateProdDetail()
+        self.drawChart()
+
+    def setFarm(self,li):
+        self.farmlist=FarmList(self.li)
+        # print(self.li)
+        # self.farm_combo.addItems(self.li)
+        self.farmlist.show()
+        
+    def show_farm_name(self):
+        '''스토어팜 주소를 콤보박스에서 변경시에 검색하여 스토어팜 이름 표시
+        prod_combo도 변경함
+        '''
+        # self.shop_title_label.setText("sssss")
+        url=self.farm_combo.currentText()
+        req=requests.get(url)
+        soup=BeautifulSoup(req.text, 'html.parser')
+        self.shop_title_label.setText(soup.find('title').text.strip())
+        self.init_prod_combo()
+
+        # self.init_prod_combo()
+        # self.tablewidget.clear()
+        # self.shop_title_label.setText("aaa")
 
 class MyStorFarm(QWidget):
     def __init__(self):
@@ -418,9 +699,7 @@ class MyStorFarm(QWidget):
         #     cur.execute('''
         #             REPlACE INTO PROD (dt,title, pid, jjim, sold,review) VALUES (?,?,?,?,?,?);''', (tod,item['name'],item['pid'] ,item['jjim'],item['sold'],item['review']))
         sql=f"Select distinct dt from PROD3 where link like '{mall_url}%'"
-        
-        # cur.execute('''
-        #             Select distinct dt from PROD3''')
+
         cur.execute(sql)
         conn.commit()
         
